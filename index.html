@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>fanmap · where he stood</title>
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <div>
+        <h1>fan<em>map</em></h1>
+        <p class="subtitle">where they stood · mapa de lugares de fandom</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="fandom-picker">
+        <label for="artist-select">fandom</label>
+        <select id="artist-select"></select>
+        <button type="button" class="btn ghost small" id="new-fandom">+ novo</button>
+      </div>
+      <nav class="tabs">
+        <button class="tab active" data-view="map">mapa</button>
+        <button class="tab" data-view="add">cadastrar</button>
+        <button class="tab" data-view="route">rota</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <!-- Banner de modo (mostra quando está em modo local) -->
+      <div id="mode-banner" class="mode-banner hidden"></div>
+
+      <!-- VIEW: MAPA / LISTA -->
+      <section id="view-map" class="view active">
+        <input id="search" type="search" placeholder="buscar lugar ou cidade" />
+        <div class="chips" id="category-filters"></div>
+        <div class="list-header">
+          <span id="places-count">—</span>
+          <select id="sort">
+            <option value="confirmed">mais confirmados</option>
+            <option value="recent">mais recentes</option>
+            <option value="name">nome a–z</option>
+          </select>
+        </div>
+        <ul id="places-list" class="places-list"></ul>
+      </section>
+
+      <!-- VIEW: CADASTRAR -->
+      <section id="view-add" class="view">
+        <h2>um novo lugar</h2>
+        <p class="hint">clique no mapa para marcar o ponto exato, ou preencha as coordenadas à mão.</p>
+        <form id="add-form" class="form">
+          <label>nome do lugar
+            <input name="name" required placeholder="o café que ele visitou" />
+          </label>
+          <label>categoria
+            <select name="category" required>
+              <option value="cafe">café</option>
+              <option value="restaurante">restaurante</option>
+              <option value="loja">loja</option>
+              <option value="gravacao">gravação (mv/filme)</option>
+              <option value="show">show / palco</option>
+              <option value="outro">outro</option>
+            </select>
+          </label>
+          <label>cidade / país
+            <input name="city" placeholder="londres, reino unido" />
+          </label>
+          <label>endereço
+            <input name="address" placeholder="rua, número, bairro" />
+          </label>
+          <div class="coords">
+            <label>latitude
+              <input name="lat" id="lat" required type="number" step="any" placeholder="51.5185" />
+            </label>
+            <label>longitude
+              <input name="lng" id="lng" required type="number" step="any" placeholder="-0.1400" />
+            </label>
+          </div>
+          <p class="coords-help" id="coords-help">clique no mapa para preencher as coordenadas</p>
+          <label>por que é relevante?
+            <textarea name="description" required rows="3" placeholder="o que ele fez aqui? quando? como você sabe?"></textarea>
+          </label>
+          <label>link de referência (opcional)
+            <input name="link" type="url" placeholder="https://..." />
+          </label>
+          <label>seu @ de fã (opcional)
+            <input name="submittedBy" placeholder="anônimo" />
+          </label>
+          <div class="form-actions">
+            <button type="submit" class="btn primary" id="submit-add">cadastrar</button>
+            <button type="button" class="btn ghost" id="cancel-add">cancelar</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- VIEW: ROTAS -->
+      <section id="view-route" class="view">
+        <h2>sua peregrinação</h2>
+        <p class="hint">monte o roteiro na ordem que quiser. os pontos são ligados no mapa.</p>
+        <ol id="route-list" class="route-list"></ol>
+        <div class="route-summary" id="route-summary"></div>
+        <div class="form-actions">
+          <button type="button" class="btn primary" id="draw-route">traçar no mapa</button>
+          <button type="button" class="btn ghost" id="clear-route">limpar</button>
+        </div>
+        <p class="hint" id="route-empty">sua rota está vazia. vá em <strong>mapa</strong> e toque em “+ rota” num lugar.</p>
+      </section>
+    </aside>
+
+    <div id="map"></div>
+  </main>
+
+  <div id="modal" class="modal hidden">
+    <div class="modal-card">
+      <button class="modal-close" id="modal-close">✕</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script src="js/config.js"></script>
+  <script src="js/seed-data.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
