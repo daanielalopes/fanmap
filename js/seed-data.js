@@ -125,3 +125,17 @@ window.SEED_PLACES = [
 
 /* Fandoms sugeridos que aparecem no seletor mesmo sem lugares ainda. */
 window.SEED_ARTISTS = ["Harry Styles", "Taylor Swift", "BTS"];
+
+/**
+ * Integração com o Spotify (player embed, sem login/OAuth).
+ * Mapeia o nome do fandom -> ID do artista no Spotify.
+ * O embed é montado como: https://open.spotify.com/embed/artist/<ID>
+ * Fandoms sem mapeamento simplesmente não exibem o player.
+ * Para adicionar: abra o artista no Spotify, copie o ID da URL
+ * (open.spotify.com/artist/<ID>) e coloque aqui.
+ */
+window.SPOTIFY_ARTISTS = {
+  "Harry Styles": "6KImCVD70vtIoJWnq6nGn3",
+  "Taylor Swift": "06HL4z0CvFAxyc27GXpf02",
+  "BTS": "3Nrfpe0tUJi4K4DXYWgMUX"
+};

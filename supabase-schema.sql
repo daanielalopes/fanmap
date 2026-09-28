@@ -25,6 +25,18 @@ create table if not exists public.places (
 
 -- Se a tabela já existia sem a coluna artist, adiciona:
 alter table public.places add column if not exists artist text not null default 'Harry Styles';
+-- Foto do lugar (URL). Opcional.
+alter table public.places add column if not exists photo_url text;
+
+-- Tabela de comentários/dicas deixados pelos fãs em cada lugar.
+create table if not exists public.comments (
+  id         uuid primary key default gen_random_uuid(),
+  place_id   uuid not null references public.places(id) on delete cascade,
+  author     text default 'Anônimo',
+  body       text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists comments_place_idx on public.comments (place_id, created_at desc);
 
 -- Tabela de votos: 1 voto por navegador (client_id) por local.
 create table if not exists public.votes (
@@ -88,16 +100,21 @@ $$;
 -- ------------------------------------------------------------
 --  Segurança (RLS)
 -- ------------------------------------------------------------
-alter table public.places enable row level security;
-alter table public.votes  enable row level security;
+alter table public.places   enable row level security;
+alter table public.votes    enable row level security;
+alter table public.comments enable row level security;
 
-drop policy if exists "places_read"   on public.places;
-drop policy if exists "places_insert" on public.places;
-drop policy if exists "votes_read"    on public.votes;
+drop policy if exists "places_read"    on public.places;
+drop policy if exists "places_insert"  on public.places;
+drop policy if exists "votes_read"     on public.votes;
+drop policy if exists "comments_read"   on public.comments;
+drop policy if exists "comments_insert" on public.comments;
 
-create policy "places_read"   on public.places for select using (true);
-create policy "places_insert" on public.places for insert with check (true);
-create policy "votes_read"    on public.votes  for select using (true);
+create policy "places_read"    on public.places   for select using (true);
+create policy "places_insert"  on public.places   for insert with check (true);
+create policy "votes_read"     on public.votes    for select using (true);
+create policy "comments_read"   on public.comments for select using (true);
+create policy "comments_insert" on public.comments for insert with check (true);
 
 grant execute on function public.cast_vote(uuid, text, text) to anon;
 grant execute on function public.list_artists() to anon;
@@ -110,6 +127,7 @@ insert into public.places (artist, name, category, city, address, lat, lng, desc
 values
 -- ---- Harry Styles ----
 ('Harry Styles','Kaffeine','cafe','Londres, Reino Unido','66 Great Titchfield St, Fitzrovia, W1W 7QJ',51.5185,-0.1400,'Chamado pelo próprio Harry de seu café favorito. Em 2026 ele pagou o café de fãs que visitaram o local para comemorar a turnê.','https://www.standard.co.uk/showbiz/harry-styles-together-tour-2027-london-coffee-b1297492.html','equipe',42,1),
+-- (a coluna photo_url é opcional; fica NULL por padrão nas linhas abaixo)
 ('Harry Styles','How Matcha!','cafe','Londres, Reino Unido','Blandford Street, Marylebone',51.5178,-0.1533,'Café de matchá em Marylebone conhecido pelas combinações de sabores; o cantor já foi visto por lá.','https://www.cntraveller.com/article/harry-styles-guide-to-london','equipe',18,3),
 ('Harry Styles','Rita''s Soho','restaurante','Londres, Reino Unido','Soho, Londres',51.5138,-0.1330,'Bistrô de estilo americano no Soho. Já recebeu Harry Styles e Zoë Kravitz em um jantar.','https://uk.news.yahoo.com/inside-excellent-gorgeous-london-restaurant-040000048.html','equipe',14,2),
 ('Harry Styles','SAY Doughnuts','loja','Bedford, Reino Unido','Bedford, Inglaterra',52.1360,-0.4666,'Loja de donuts em Bedford onde Harry virou "meio que um cliente frequente" segundo os donos.','https://www.yahoo.com/entertainment/celebrity/articles/harry-styles-bit-regular-local-190217668.html','equipe',27,0),

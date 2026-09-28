@@ -305,3 +305,121 @@ html, body {
   .sidebar { padding: 6px 8px; }
   .app-header { padding: 20px 20px 14px; }
 }
+
+
+/* ============================================================
+   NOVOS COMPONENTES — passaporte, fotos, comentários,
+   explorar (stats/ranking/spotify), filtro de cidade
+   ============================================================ */
+
+/* Badge do passaporte no header */
+.passport-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--accent-soft); color: var(--accent);
+  padding: 7px 13px; border-radius: 999px; font-size: 13px;
+  letter-spacing: .3px; border: 1px solid var(--line);
+}
+.passport-badge strong { color: var(--ink); font-weight: 600; }
+
+/* Filtro de cidade (mesmo look do sort) */
+#city-filter {
+  border: none; background: transparent; color: var(--ink);
+  font-family: var(--sans); font-size: 12px; cursor: pointer;
+  letter-spacing: .5px; max-width: 130px;
+}
+
+/* Foto no card */
+.card-photo {
+  margin: -18px -18px 12px; border-radius: var(--radius) var(--radius) 0 0;
+  overflow: hidden; height: 130px;
+}
+.card-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Card já visitado */
+.place-card.is-visited { border-color: var(--confirm); }
+.visited-pill {
+  font-size: 10px; background: #e6ede4; color: var(--confirm);
+  padding: 2px 8px; border-radius: 999px; letter-spacing: .4px;
+  vertical-align: middle; white-space: nowrap;
+}
+
+/* Foto no modal */
+.modal-photo {
+  margin: -30px -30px 16px; height: 200px; overflow: hidden;
+  border-radius: 24px 24px 0 0;
+}
+.modal-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Botão marcar visitado */
+.visited-btn {
+  width: 100%; margin: 14px 0 4px; background: var(--accent-soft);
+  color: var(--accent-dark, var(--accent)); border: 1px solid var(--line);
+}
+.visited-btn:hover { border-color: var(--accent); }
+.visited-btn.on { background: var(--confirm); color: #fff; border-color: transparent; }
+
+/* Comentários */
+.comments { margin-top: 24px; border-top: 1px solid var(--line); padding-top: 18px; }
+.comments-title { font-family: var(--serif); font-weight: 400; font-size: 18px; margin: 0 0 12px; }
+.comments-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+.comment {
+  background: var(--paper); border-radius: var(--radius-sm); padding: 12px 14px;
+}
+.comment-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 12px; color: var(--muted); margin-bottom: 5px;
+}
+.comment-head strong { color: var(--ink); font-weight: 500; }
+.comment p { margin: 0; font-size: 14px; line-height: 1.5; color: #4a443c; }
+.comment-form { display: flex; flex-direction: column; gap: 8px; }
+.comment-form input, .comment-form textarea {
+  font-family: var(--sans); font-size: 13.5px; font-weight: 300;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--card); color: var(--ink); resize: vertical;
+}
+.comment-form input:focus, .comment-form textarea:focus { outline: none; border-color: var(--accent); }
+.comment-form button { align-self: flex-start; }
+
+/* ---------- EXPLORAR ---------- */
+.explore-h {
+  font-family: var(--serif); font-weight: 400; font-size: 17px;
+  margin: 26px 2px 12px; letter-spacing: -0.2px;
+}
+.stats-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px;
+}
+.stat-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 16px; display: flex; flex-direction: column; gap: 3px;
+}
+.stat-n { font-family: var(--serif); font-size: 28px; line-height: 1; color: var(--accent); }
+.stat-l { font-size: 11.5px; color: var(--muted); letter-spacing: .5px; }
+
+.spotify-embed { border-radius: 12px; overflow: hidden; }
+.spotify-embed iframe { display: block; }
+.spotify-embed code {
+  background: var(--accent-soft); padding: 1px 5px; border-radius: 5px; font-size: 12px;
+}
+
+.ranking-list { list-style: none; counter-reset: rk; padding: 0; margin: 0; }
+.ranking-list li {
+  display: flex; align-items: center; gap: 12px; justify-content: space-between;
+  padding: 12px 0; border-bottom: 1px solid var(--line); cursor: pointer;
+}
+.ranking-list li:not(.hint)::before {
+  counter-increment: rk; content: counter(rk);
+  font-family: var(--serif); font-size: 18px; color: var(--accent); min-width: 20px;
+}
+.ranking-list li:hover .r-name { color: var(--accent); }
+.ranking-list li > div { flex: 1; }
+.r-name { display: block; font-size: 14.5px; }
+.r-city { display: block; font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.r-score { font-size: 12.5px; color: var(--confirm); white-space: nowrap; }
+
+.recent-list { list-style: none; padding: 0; margin: 0; }
+.recent-list li {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+  padding: 10px 0; border-bottom: 1px dashed var(--line); cursor: pointer;
+}
+.recent-list li:hover .r-name { color: var(--accent); }
+.recent-list .r-city { text-align: right; }

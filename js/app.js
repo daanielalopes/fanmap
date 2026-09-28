@@ -18,6 +18,7 @@ let places = [];
 let activeCategories = new Set(Object.keys(CATEGORIES));
 let searchTerm = "";
 let sortMode = "confirmed";
+let cityFilter = "";
 let route = [];
 let markers = {};
 let routeLine = null;
@@ -78,6 +79,7 @@ function statusOf(p) {
 
 function visiblePlaces() {
   let list = places.filter((p) => activeCategories.has(p.category));
+  if (cityFilter) list = list.filter((p) => (p.city || "") === cityFilter);
   if (searchTerm) {
     const t = searchTerm.toLowerCase();
     list = list.filter((p) =>
@@ -112,12 +114,17 @@ function renderList() {
     const cat = CATEGORIES[p.category] || CATEGORIES.outro;
     const st = statusOf(p);
     const inRoute = route.includes(p.id);
+    const visitedMark = Store.isVisited(p.id) ? `<span class="visited-pill">🛂 já fui</span>` : "";
+    const photo = p.photoUrl
+      ? `<div class="card-photo"><img src="${escapeAttr(p.photoUrl)}" alt="${escapeAttr(p.name)}" loading="lazy" onerror="this.parentNode.remove()"/></div>`
+      : "";
     const li = document.createElement("li");
-    li.className = "place-card";
+    li.className = "place-card" + (Store.isVisited(p.id) ? " is-visited" : "");
     li.innerHTML = `
+      ${photo}
       <div class="top">
         <div>
-          <h3>${escapeHtml(p.name)}</h3>
+          <h3>${escapeHtml(p.name)} ${visitedMark}</h3>
           <div class="city">${escapeHtml(p.city || "")} <span class="status-pill ${st.cls}">${st.label}</span></div>
         </div>
         <span class="cat-badge" style="background:${cat.color}">${cat.label}</span>
@@ -176,9 +183,15 @@ function openModal(id) {
   const cat = CATEGORIES[p.category] || CATEGORIES.outro;
   const st = statusOf(p);
   const myVote = Store.myVote(id);
+  const visited = Store.isVisited(id);
+
+  const photo = p.photoUrl
+    ? `<div class="modal-photo"><img src="${escapeAttr(p.photoUrl)}" alt="${escapeAttr(p.name)}" onerror="this.parentNode.remove()"/></div>`
+    : "";
 
   const body = document.getElementById("modal-body");
   body.innerHTML = `
+    ${photo}
     <span class="cat-badge" style="background:${cat.color}">${cat.label}</span>
     <span class="status-pill ${st.cls}">${st.label}</span>
     <h2>${escapeHtml(p.name)}</h2>
@@ -192,6 +205,9 @@ function openModal(id) {
       enviado por <strong>${escapeHtml(p.submittedBy || "anônimo")}</strong> ·
       ✓ ${p.confirms} confirmam · ✕ ${p.doubts} duvidam
     </div>
+    <button class="btn visited-btn ${visited ? "on" : ""}" id="btn-visited">
+      ${visited ? "🛂 você já foi aqui" : "🛂 marcar que já fui"}
+    </button>
     <div class="validate-row">
       <button class="btn confirm" id="btn-confirm" ${myVote === "confirm" ? "disabled" : ""}>
         ${myVote === "confirm" ? "✓ você confirmou" : "✓ confirmo"}
@@ -205,6 +221,16 @@ function openModal(id) {
       ${route.includes(id)
         ? `<button class="btn ghost small" id="btn-route">✓ remover da rota</button>`
         : `<button class="btn primary small" id="btn-route">+ adicionar à rota</button>`}
+    </div>
+
+    <div class="comments">
+      <h3 class="comments-title">💬 dicas & recados</h3>
+      <div id="comments-list" class="comments-list"><p class="hint">carregando…</p></div>
+      <form id="comment-form" class="comment-form">
+        <input name="cauthor" placeholder="seu @ (opcional)" maxlength="40" />
+        <textarea name="cbody" required rows="2" placeholder="deixe uma dica: melhor horário, o que pedir, se rolou foto..."></textarea>
+        <button type="submit" class="btn primary small">comentar</button>
+      </form>
     </div>`;
 
   const cBtn = body.querySelector("#btn-confirm");
@@ -213,8 +239,57 @@ function openModal(id) {
   if (dBtn) dBtn.addEventListener("click", () => vote(id, "doubt"));
   body.querySelector("#btn-goto").addEventListener("click", () => { closeModal(); focusPlace(id); });
   body.querySelector("#btn-route").addEventListener("click", () => { toggleRoute(id); openModal(id); });
+  body.querySelector("#btn-visited").addEventListener("click", () => {
+    const now = Store.toggleVisited(id);
+    updatePassportBadge();
+    renderList();
+    openModal(id);
+    toast(now ? "adicionado ao seu passaporte 🛂" : "removido do passaporte.");
+  });
+
+  body.querySelector("#comment-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const text = f.cbody.value.trim();
+    if (!text) return;
+    const btn = f.querySelector("button");
+    btn.disabled = true; btn.textContent = "enviando...";
+    try {
+      await Store.addComment(id, { author: f.cauthor.value.trim() || "anônimo", body: text });
+      f.reset();
+      await renderComments(id);
+      toast("comentário publicado 💬");
+    } catch (err) {
+      toast("erro ao comentar: " + err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = "comentar";
+    }
+  });
 
   document.getElementById("modal").classList.remove("hidden");
+  renderComments(id);
+}
+
+async function renderComments(id) {
+  const box = document.getElementById("comments-list");
+  if (!box) return;
+  try {
+    const list = await Store.listComments(id);
+    if (!list.length) {
+      box.innerHTML = `<p class="hint">ainda não há dicas. seja a primeira a comentar!</p>`;
+      return;
+    }
+    box.innerHTML = list.map((c) => `
+      <div class="comment">
+        <div class="comment-head">
+          <strong>${escapeHtml(c.author || "anônimo")}</strong>
+          <span>${formatDate(c.createdAt)}</span>
+        </div>
+        <p>${escapeHtml(c.body)}</p>
+      </div>`).join("");
+  } catch (err) {
+    box.innerHTML = `<p class="hint">não foi possível carregar os comentários.</p>`;
+  }
 }
 function closeModal() { document.getElementById("modal").classList.add("hidden"); }
 
@@ -351,6 +426,7 @@ document.getElementById("add-form").addEventListener("submit", async (e) => {
       lat, lng,
       description: f.description.value.trim(),
       link: f.link.value.trim(),
+      photoUrl: f.photoUrl.value.trim(),
       submittedBy: f.submittedBy.value.trim() || "anônimo"
     });
     places.unshift(created);
@@ -384,6 +460,7 @@ function switchView(view) {
   document.querySelectorAll(".view").forEach((v) => v.classList.toggle("active", v.id === "view-" + view));
   pickMode = (view === "add");
   if (pickMode) toast("clique no mapa para marcar a localização 📍");
+  if (view === "explore") renderExplore();
   setTimeout(() => map.invalidateSize(), 100);
 }
 document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => switchView(t.dataset.view)));
@@ -396,6 +473,18 @@ function escapeHtml(s) {
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 function escapeAttr(s) { return escapeHtml(s).replace(/`/g, "&#96;"); }
+function formatDate(iso) {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+  } catch (e) { return ""; }
+}
+function updatePassportBadge() {
+  const el = document.getElementById("passport-count");
+  if (!el) return;
+  const ids = places.map((p) => p.id);
+  el.textContent = Store.visitedCount(ids);
+}
 
 let toastTimer;
 function toast(msg) {
@@ -413,10 +502,87 @@ document.getElementById("search").addEventListener("input", (e) => {
 document.getElementById("sort").addEventListener("change", (e) => {
   sortMode = e.target.value; renderList();
 });
+document.getElementById("city-filter").addEventListener("change", (e) => {
+  cityFilter = e.target.value; renderList(); renderMarkers();
+});
 document.getElementById("modal-close").addEventListener("click", closeModal);
 document.getElementById("modal").addEventListener("click", (e) => { if (e.target.id === "modal") closeModal(); });
 document.getElementById("draw-route").addEventListener("click", drawRoute);
 document.getElementById("clear-route").addEventListener("click", clearRoute);
+
+/* ============================================================
+   FILTRO DE CIDADE
+   ============================================================ */
+function populateCityFilter() {
+  const sel = document.getElementById("city-filter");
+  const cities = Array.from(new Set(places.map((p) => p.city).filter(Boolean))).sort();
+  const prev = cityFilter;
+  sel.innerHTML = `<option value="">todas as cidades</option>` +
+    cities.map((c) => `<option value="${escapeAttr(c)}">${escapeHtml(c)}</option>`).join("");
+  // mantém seleção se ainda existir
+  if (cities.includes(prev)) sel.value = prev;
+  else { cityFilter = ""; sel.value = ""; }
+}
+
+/* ============================================================
+   EXPLORAR (ranking, recém-adicionados, estatísticas, spotify)
+   ============================================================ */
+function renderExplore() {
+  document.getElementById("explore-title").textContent = `explorar · ${currentArtist || ""}`;
+
+  // Estatísticas
+  const total = places.length;
+  const cities = new Set(places.map((p) => p.city).filter(Boolean));
+  const verified = places.filter((p) => statusOf(p).label === "verificado").length;
+  const visited = Store.visitedCount(places.map((p) => p.id));
+  const stats = [
+    { n: total, label: total === 1 ? "lugar" : "lugares" },
+    { n: cities.size, label: cities.size === 1 ? "cidade" : "cidades" },
+    { n: verified, label: "verificados" },
+    { n: visited, label: "no seu passaporte" }
+  ];
+  document.getElementById("stats-grid").innerHTML = stats.map((s) => `
+    <div class="stat-card"><span class="stat-n">${s.n}</span><span class="stat-l">${s.label}</span></div>
+  `).join("");
+
+  // Spotify embed
+  const spotifyBox = document.getElementById("spotify-embed");
+  const spotifyMap = window.SPOTIFY_ARTISTS || {};
+  const sid = spotifyMap[currentArtist];
+  if (sid) {
+    spotifyBox.innerHTML = `<iframe style="border-radius:12px" src="https://open.spotify.com/embed/artist/${encodeURIComponent(sid)}?utm_source=fanmap" width="100%" height="352" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`;
+  } else {
+    spotifyBox.innerHTML = `<p class="hint">nenhuma playlist vinculada a este fandom ainda. adicione o ID do artista no arquivo <code>js/seed-data.js</code> (SPOTIFY_ARTISTS).</p>`;
+  }
+
+  // Em alta (mais confirmados, score positivo)
+  const ranking = places.slice().sort((a, b) => (b.confirms - b.doubts) - (a.confirms - a.doubts)).slice(0, 5);
+  const rk = document.getElementById("ranking-list");
+  rk.innerHTML = ranking.length
+    ? ranking.map((p) => {
+        const cat = CATEGORIES[p.category] || CATEGORIES.outro;
+        return `<li data-id="${escapeAttr(p.id)}">
+          <div><span class="r-name">${escapeHtml(p.name)}</span>
+          <span class="r-city">${cat.label} · ${escapeHtml(p.city || "")}</span></div>
+          <span class="r-score">✓ ${p.confirms}</span>
+        </li>`;
+      }).join("")
+    : `<li class="hint">sem lugares ainda.</li>`;
+  rk.querySelectorAll("li[data-id]").forEach((li) =>
+    li.addEventListener("click", () => openModal(li.dataset.id)));
+
+  // Recém-adicionados
+  const recents = places.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
+  const rc = document.getElementById("recent-list");
+  rc.innerHTML = recents.length
+    ? recents.map((p) => `<li data-id="${escapeAttr(p.id)}">
+        <span class="r-name">${escapeHtml(p.name)}</span>
+        <span class="r-city">${escapeHtml(p.city || "")}</span>
+      </li>`).join("")
+    : `<li class="hint">sem lugares ainda.</li>`;
+  rc.querySelectorAll("li[data-id]").forEach((li) =>
+    li.addEventListener("click", () => openModal(li.dataset.id)));
+}
 
 /* ============================================================
    FANDOMS (multi-artista)
@@ -442,6 +608,9 @@ async function loadPlacesForArtist() {
     places = [];
     toast("erro ao carregar: " + err.message);
   }
+  cityFilter = "";
+  populateCityFilter();
+  updatePassportBadge();
   renderList();
   renderMarkers();
   // enquadra o mapa nos lugares do fandom, se houver

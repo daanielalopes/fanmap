@@ -27,8 +27,10 @@
         <select id="artist-select"></select>
         <button type="button" class="btn ghost small" id="new-fandom">+ novo</button>
       </div>
+      <span class="passport-badge" id="passport-badge" title="lugares que você marcou como visitados">🛂 <strong id="passport-count">0</strong></span>
       <nav class="tabs">
         <button class="tab active" data-view="map">mapa</button>
+        <button class="tab" data-view="explore">explorar</button>
         <button class="tab" data-view="add">cadastrar</button>
         <button class="tab" data-view="route">rota</button>
       </nav>
@@ -46,6 +48,9 @@
         <div class="chips" id="category-filters"></div>
         <div class="list-header">
           <span id="places-count">—</span>
+          <select id="city-filter" title="filtrar por cidade">
+            <option value="">todas as cidades</option>
+          </select>
           <select id="sort">
             <option value="confirmed">mais confirmados</option>
             <option value="recent">mais recentes</option>
@@ -94,6 +99,9 @@
           <label>link de referência (opcional)
             <input name="link" type="url" placeholder="https://..." />
           </label>
+          <label>foto do lugar — URL (opcional)
+            <input name="photoUrl" type="url" placeholder="https://.../foto.jpg" />
+          </label>
           <label>seu @ de fã (opcional)
             <input name="submittedBy" placeholder="anônimo" />
           </label>
@@ -115,6 +123,22 @@
           <button type="button" class="btn ghost" id="clear-route">limpar</button>
         </div>
         <p class="hint" id="route-empty">sua rota está vazia. vá em <strong>mapa</strong> e toque em “+ rota” num lugar.</p>
+      </section>
+
+      <!-- VIEW: EXPLORAR -->
+      <section id="view-explore" class="view">
+        <h2 id="explore-title">explorar</h2>
+
+        <div class="stats-grid" id="stats-grid"></div>
+
+        <h3 class="explore-h">🎧 ouça no spotify</h3>
+        <div id="spotify-embed" class="spotify-embed"></div>
+
+        <h3 class="explore-h">🔥 em alta</h3>
+        <ol id="ranking-list" class="ranking-list"></ol>
+
+        <h3 class="explore-h">✨ recém-adicionados</h3>
+        <ul id="recent-list" class="recent-list"></ul>
       </section>
     </aside>
 
