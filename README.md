@@ -15,6 +15,12 @@ Feito com HTML/CSS/JS puro + [Leaflet](https://leafletjs.com/) (mapa) + [Supabas
 - ✓ **Validação da comunidade** — 1 voto por pessoa (confirmar / duvidar), com status *verificado · em análise · contestado*
 - 🧭 **Rotas de peregrinação** — monte, reordene e trace seu roteiro no mapa
 - 🎤 **Multi-fandom** — um seletor no topo troca entre artistas; cada fandom tem seus próprios lugares e rotas
+- 📸 **Fotos** nos lugares (via URL), exibidas no card e no detalhe
+- 💬 **Comentários & dicas** da comunidade em cada lugar
+- 🏙️ **Filtro por cidade** para montar rotas locais
+- 🔥 **Aba explorar** — estatísticas do fandom, lugares em alta e recém-adicionados
+- 🛂 **Passaporte** — marque os lugares que você já visitou e acompanhe o contador
+- 🎧 **Spotify** — player do artista embutido na aba explorar (sem login)
 
 ---
 
@@ -87,6 +93,19 @@ Salve, recarregue a página — o banner de "modo local" some e a colaboração 
 ```
 
 ---
+
+## 🎧 Vincular um artista do Spotify
+
+Na aba **explorar**, o app mostra um player do Spotify do artista do fandom. Para vincular (ou trocar) o artista, edite o mapa `SPOTIFY_ARTISTS` em [`js/seed-data.js`](./js/seed-data.js):
+
+```js
+window.SPOTIFY_ARTISTS = {
+  "Harry Styles": "6KImCVD70vtIoJWnq6nGn3",
+  "Nome do Fandom": "ID_DO_ARTISTA_NO_SPOTIFY"
+};
+```
+
+O ID do artista está na URL do Spotify: `open.spotify.com/artist/<ID>`. Fandoms sem mapeamento simplesmente não exibem o player. Não requer login nem API key — usa o player público incorporado.
 
 ## 🌱 Ideias futuras
 
