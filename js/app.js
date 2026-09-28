@@ -32,9 +32,9 @@ const ARTIST_KEY = "fanmap-current-artist";
    MAPA
    ============================================================ */
 const map = L.map("map", { zoomControl: true }).setView([51.515, -0.13], 6);
-L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
-  attribution: '&copy; OpenStreetMap &copy; CARTO'
+  attribution: '&copy; colaboradores do OpenStreetMap'
 }).addTo(map);
 
 map.on("click", (e) => {
